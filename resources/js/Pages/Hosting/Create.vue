@@ -1,0 +1,178 @@
+<script setup>
+import { useForm } from '@inertiajs/vue3'
+import DashboardLayout from '@/Layouts/DashboardLayout.vue'
+
+const props = defineProps({
+    domains: Array,
+    servers: Array
+})
+
+const form = useForm({
+    domain_id: '',
+    server_id: '',
+    username: '',
+    panel: '',
+    disk_usage: 0,
+    bandwidth_usage: 0,
+    status: 'active'
+})
+
+function submit() {
+    form.post('/hosting')
+}
+</script>
+
+<template>
+<DashboardLayout>
+
+<div class="p-8">
+
+<h1 class="text-2xl font-bold text-white mb-6">
+Add Hosting Account
+</h1>
+
+<form
+@submit.prevent="submit"
+class="max-w-xl p-8 rounded-2xl shadow-2xl
+backdrop-blur-xl
+bg-gradient-to-br from-sky-600/20 via-blue-500/20 to-indigo-600/20
+border border-white/20 space-y-6">
+
+<!-- Domain -->
+<div>
+<label class="text-white/80 text-sm">Domain</label>
+
+<select
+v-model="form.domain_id"
+class="w-full mt-2 p-3 rounded-lg
+bg-white/20 border border-white/30
+text-white
+focus:outline-none focus:ring-2 focus:ring-sky-400">
+
+<option value="" class="text-black">Select Domain</option>
+
+<option
+v-for="d in domains"
+:key="d.id"
+:value="d.id"
+class="text-black">
+
+{{ d.domain_name }}
+
+</option>
+
+</select>
+</div>
+
+<!-- Server -->
+<div>
+<label class="text-white/80 text-sm">Server</label>
+
+<select
+v-model="form.server_id"
+class="w-full mt-2 p-3 rounded-lg
+bg-white/20 border border-white/30
+text-white
+focus:outline-none focus:ring-2 focus:ring-sky-400">
+
+<option value="" class="text-black">Select Server</option>
+
+<option
+v-for="s in servers"
+:key="s.id"
+:value="s.id"
+class="text-black">
+
+{{ s.name }}
+
+</option>
+
+</select>
+</div>
+
+<!-- Username -->
+<div>
+<label class="text-white/80 text-sm">Username</label>
+
+<input
+v-model="form.username"
+placeholder="hosting username"
+class="w-full mt-2 p-3 rounded-lg
+bg-white/20 border border-white/30
+text-white placeholder-white/60
+focus:outline-none focus:ring-2 focus:ring-sky-400"/>
+</div>
+
+<!-- Panel -->
+<div>
+<label class="text-white/80 text-sm">Panel</label>
+
+<input
+v-model="form.panel"
+placeholder="cPanel / Plesk"
+class="w-full mt-2 p-3 rounded-lg
+bg-white/20 border border-white/30
+text-white placeholder-white/60
+focus:outline-none focus:ring-2 focus:ring-sky-400"/>
+</div>
+
+<!-- Disk -->
+<div>
+<label class="text-white/80 text-sm">Disk Usage (MB)</label>
+
+<input
+type="number"
+v-model="form.disk_usage"
+class="w-full mt-2 p-3 rounded-lg
+bg-white/20 border border-white/30
+text-white
+focus:outline-none focus:ring-2 focus:ring-sky-400"/>
+</div>
+
+<!-- Bandwidth -->
+<div>
+<label class="text-white/80 text-sm">Bandwidth (MB)</label>
+
+<input
+type="number"
+v-model="form.bandwidth_usage"
+class="w-full mt-2 p-3 rounded-lg
+bg-white/20 border border-white/30
+text-white
+focus:outline-none focus:ring-2 focus:ring-sky-400"/>
+</div>
+
+<!-- Status -->
+<div>
+<label class="text-white/80 text-sm">Status</label>
+
+<select
+v-model="form.status"
+class="w-full mt-2 p-3 rounded-lg
+bg-white/20 border border-white/30
+text-white
+focus:outline-none focus:ring-2 focus:ring-sky-400">
+
+<option value="active" class="text-black">Active</option>
+<option value="suspended" class="text-black">Suspended</option>
+
+</select>
+</div>
+
+<!-- Button -->
+<button
+class="w-full py-3 rounded-lg
+bg-gradient-to-r from-sky-500 to-blue-600
+hover:from-sky-600 hover:to-blue-700
+text-white font-semibold shadow-lg transition">
+
+Save Hosting Account
+
+</button>
+
+</form>
+
+</div>
+
+</DashboardLayout>
+</template>
