@@ -1,5 +1,5 @@
 # Domain & Hosting Manager
-
+[![Tests](https://github.com/KhderAhmed/domain-manager/actions/workflows/tests.yml/badge.svg)](https://github.com/KhderAhmed/domain-manager/actions/workflows/tests.yml)
 A multi-tenant domain & hosting management dashboard built with **Laravel 12**, **Vue 3**, and **Inertia.js**.
 
 [![Tests](https://github.com/KhderAhmed/domain-manager/actions/workflows/tests.yml/badge.svg)](https://github.com/KhderAhmed/domain-manager/actions/workflows/tests.yml)
