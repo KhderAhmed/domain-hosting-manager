@@ -4,16 +4,15 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class EnsureUserIsAdmin
 {
     public function handle(Request $request, Closure $next)
     {
-        if (Auth::check() && Auth::user()->email === 'admin@gmail.com') {
+        if ($request->user()?->is_admin) {
             return $next($request);
         }
 
-        return redirect('/login');
+        abort(403, 'Unauthorized.');
     }
 }

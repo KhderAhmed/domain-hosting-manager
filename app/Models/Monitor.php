@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Monitor extends Model
 {
@@ -14,13 +16,13 @@ class Monitor extends Model
         'interval',
     ];
 
-    public function domain()
+    public function domain(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Domain::class);
+        return $this->belongsTo(Domain::class);
     }
 
-    public function logs()
+    public function logs(): HasMany
     {
-        return $this->hasMany(\App\Models\ActivityLog::class);
+        return $this->hasMany(MonitorLog::class);
     }
 }

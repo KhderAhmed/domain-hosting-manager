@@ -1,34 +1,21 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use App\Jobs\CheckDomainUptimeJob;
+use App\Jobs\CheckSslExpiryJob;
+use App\Jobs\SendExpiryNotificationsJob;
+use App\Models\Domain;
+use App\Models\Monitor;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// فحص الـ uptime كل 5 دقايق للمونيتورز
+Schedule::call(function () {
+    Monitor::pluck('id')->each(fn ($id) => CheckDomainUptimeJob::dispatch($id));
+})->everyFiveMinutes()->name('uptime-check');
 
-Artisan::command('check:domains', function () {
-    // تشغيل الكوماند الأصلي
-    Artisan::call('app:check-domain-expiry');
+// فحص SSL يومياً الساعة 3 صباحاً
+Schedule::call(function () {
+    Domain::pluck('id')->each(fn ($id) => CheckSslExpiryJob::dispatch($id));
+})->dailyAt('03:00')->name('ssl-check');
 
- 
-    $this->info(Artisan::output());
-})->describe('Check all domains that will expire within 30 days');
-
-Artisan::command('check-ssl', function () {
-    // تشغيل الكوماند الأصلي
-    Artisan::call('app:check-domain-expiry');
-
-    // طباعة النتائج في الـ console
-    $this->info(Artisan::output());
-})->describe('Check all domains that will expire within 30 days');
-
-
-Artisan::command('check-uptime', function () {
-    // تشغيل الكوماند الأصلي
-    Artisan::call('app:check-domain-expiry');
-
-    // طباعة النتائج في الـ console
-    $this->info(Artisan::output());
-})->describe('Check if domains are online or down');
-//php artisan app:check-uptime
+// إشعارات الانتهاء يومياً الساعة 9 صباحاً
+Schedule::job(new SendExpiryNotificationsJob)->dailyAt('09:00')->name('expiry-notifications');

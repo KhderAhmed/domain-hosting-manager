@@ -6,75 +6,132 @@ use App\Models\Domain;
 use App\Models\Server;
 use App\Models\HostingAccount;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class HostingAccountController extends Controller
 {
-
     public function index()
     {
-        $accounts = HostingAccount::with(['domain','server'])->get();
+        Gate::authorize('viewAny', HostingAccount::class);
 
-        return Inertia::render('Hosting/Index',[
-            'accounts'=>$accounts
+        $user = auth()->user();
+
+        $accounts = $user->is_admin
+            ? HostingAccount::with(['domain', 'server'])->latest()->get()
+            : HostingAccount::with(['domain', 'server'])
+            ->whereHas('domain', fn($q) => $q->where('user_id', $user->id))
+            ->latest()
+            ->get();
+
+        return Inertia::render('Hosting/Index', [
+            'accounts' => $accounts,
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Hosting/Create',[
-            'domains'=>Domain::all(),
-            'servers'=>Server::all()
+        Gate::authorize('create', HostingAccount::class);
+
+        $user = auth()->user();
+
+        $domains = $user->is_admin
+            ? Domain::all()
+            : Domain::where('user_id', $user->id)->get();
+
+        return Inertia::render('Hosting/Create', [
+            'domains' => $domains,
+            'servers' => Server::all(),
         ]);
     }
 
     public function store(Request $request)
     {
+        Gate::authorize('create', HostingAccount::class);
+
+        $user = $request->user();
+
         $data = $request->validate([
-            'domain_id'=>'required|exists:domains,id',
-            'server_id'=>'required|exists:servers,id',
-            'username'=>'nullable|string',
-            'panel'=>'nullable|string',
-            'disk_usage'=>'nullable|integer',
-            'bandwidth_usage'=>'nullable|integer',
-            'status'=>'required|in:active,suspended'
+            'domain_id' => [
+                'required',
+                Rule::exists('domains', 'id')->when(
+                    ! $user->is_admin,
+                    fn($q) => $q->where('user_id', $user->id)
+                ),
+            ],
+            'server_id' => ['required', 'exists:servers,id'],
+            'username' => ['nullable', 'string', 'max:255'],
+            'panel' => ['nullable', 'string', 'max:255'],
+            'disk_usage' => ['nullable', 'integer', 'min:0'],
+            'bandwidth_usage' => ['nullable', 'integer', 'min:0'],
+            'status' => ['required', 'in:active,suspended'],
         ]);
 
-        HostingAccount::create($data);
+        $hosting = HostingAccount::create($data);
 
-        return redirect()->route('hosting.index');
+        activity_log('created hosting', 'HostingAccount', $hosting->id);
+
+        return redirect()->route('hosting.index')
+            ->with('success', 'Hosting account created');
     }
 
     public function edit(HostingAccount $hosting)
     {
-        return Inertia::render('Hosting/Edit',[
-            'hosting'=>$hosting,
-            'domains'=>Domain::all(),
-            'servers'=>Server::all()
+        Gate::authorize('update', $hosting);
+
+        $user = auth()->user();
+
+        $domains = $user->is_admin
+            ? Domain::all()
+            : Domain::where('user_id', $user->id)->get();
+
+        return Inertia::render('Hosting/Edit', [
+            'hosting' => $hosting->load(['domain', 'server']),
+            'domains' => $domains,
+            'servers' => Server::all(),
         ]);
     }
 
     public function update(Request $request, HostingAccount $hosting)
     {
+        Gate::authorize('update', $hosting);
+
+        $user = $request->user();
+
         $data = $request->validate([
-            'domain_id'=>'required|exists:domains,id',
-            'server_id'=>'required|exists:servers,id',
-            'username'=>'nullable|string',
-            'panel'=>'nullable|string',
-            'disk_usage'=>'nullable|integer',
-            'bandwidth_usage'=>'nullable|integer',
-            'status'=>'required|in:active,suspended'
+            'domain_id' => [
+                'required',
+                Rule::exists('domains', 'id')->when(
+                    ! $user->is_admin,
+                    fn($q) => $q->where('user_id', $user->id)
+                ),
+            ],
+            'server_id' => ['required', 'exists:servers,id'],
+            'username' => ['nullable', 'string', 'max:255'],
+            'panel' => ['nullable', 'string', 'max:255'],
+            'disk_usage' => ['nullable', 'integer', 'min:0'],
+            'bandwidth_usage' => ['nullable', 'integer', 'min:0'],
+            'status' => ['required', 'in:active,suspended'],
         ]);
 
         $hosting->update($data);
 
-        return redirect()->route('hosting.index');
+        activity_log('updated hosting', 'HostingAccount', $hosting->id);
+
+        return redirect()->route('hosting.index')
+            ->with('success', 'Hosting account updated');
     }
 
     public function destroy(HostingAccount $hosting)
     {
+        Gate::authorize('delete', $hosting);
+
+        activity_log('deleted hosting', 'HostingAccount', $hosting->id);
+
         $hosting->delete();
 
-        return redirect()->route('hosting.index');
+        return redirect()->route('hosting.index')
+            ->with('success', 'Hosting account deleted');
     }
 }

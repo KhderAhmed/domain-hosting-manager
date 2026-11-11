@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+
 use App\Models\Domain;
 use App\Models\SslCertificate;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -17,14 +18,13 @@ class SslCertificateSeeder extends Seeder
 
         if ($domain) {
             SslCertificate::create([
-    'domain_id' => $domain->id,
-    'issuer' => "Let's Encrypt",
-    'valid_from' => now()->subMonth(),
-    'valid_to' => now()->addMonths(3),
-    'status' => 'valid',
- 
-]);
+                'domain_id' => $domain->id,
+                'issuer' => "Let's Encrypt",
+                'valid_from' => now()->subMonth(),
+                'valid_to' => now()->addMonths(3),
+                'status' => 'valid',
 
+            ]);
+        }
     }
-}
 }

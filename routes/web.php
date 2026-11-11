@@ -14,46 +14,19 @@ use App\Http\Controllers\HostingAccountController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
-use App\Http\Controllers\Client\LoginController;
-use App\Http\Controllers\Client\RegisterController;
-// الصفحة الرئيسية (Welcome Page)
-Route::get('/', function () {
-    return Inertia::render('Welcome');
-});
-Route::get('/doc', function () {
-    return Inertia::render('Docs');
-});
-
-Route::middleware('client')->group(function(){
-
-Route::get('/client/dashboard', function(){
-
-return Inertia::render('Client/Dashboard');
-
-});
-
-});
-
-Route::prefix('client')->group(function () {
-
-    Route::get('/login', [LoginController::class, 'showLogin']);
-    Route::post('/login', [LoginController::class, 'login']);
-
-    Route::get('/register', [RegisterController::class, 'showRegister']);
-    Route::post('/register', [RegisterController::class, 'register']);
-
-    Route::post('/logout', [LoginController::class, 'logout']);
-});
 
 // --------------------
-// Auth Routes
+// Public Routes
+// --------------------
+Route::get('/', fn() => Inertia::render('Welcome'));
+Route::get('/doc', fn() => Inertia::render('Docs'));
+
+// --------------------
+// Auth Routes (guest only)
 // --------------------
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
-
-
-
 
     Route::get('/forgot-password', [ForgotPasswordController::class, 'create'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email');
@@ -65,11 +38,10 @@ Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name(
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 // --------------------
-// Protected Routes (Dashboard + Resources)
+// Protected Routes
 // --------------------
 Route::middleware('auth')->group(function () {
 
-    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Domains
@@ -125,13 +97,11 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{hosting}', [HostingAccountController::class, 'destroy'])->name('destroy');
     });
 
-    // Monitoring
+    // Monitoring & Logs
     Route::get('/monitor', [MonitorController::class, 'index'])->name('monitor.index');
-
-    // Activity Logs
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
-    // profile
+    // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });

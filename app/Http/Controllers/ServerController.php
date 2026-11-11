@@ -4,25 +4,31 @@ namespace App\Http\Controllers;
 
 use App\Models\Server;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class ServerController extends Controller
 {
-
     public function index()
     {
+        Gate::authorize('viewAny', Server::class);
+
         return Inertia::render('Servers/Index', [
-            'servers' => Server::latest()->get()
+            'servers' => Server::with('user')->latest()->get(),
         ]);
     }
 
     public function create()
     {
+        Gate::authorize('create', Server::class);
+
         return Inertia::render('Servers/Create');
     }
 
     public function edit(Server $server)
     {
+        Gate::authorize('update', $server);
+
         return Inertia::render('Servers/Edit', [
             'servers' => $server,
         ]);
@@ -30,54 +36,68 @@ class ServerController extends Controller
 
     public function store(Request $request)
     {
+        Gate::authorize('create', Server::class);
 
         $data = $request->validate([
-            'name' => 'required',
-            'ip_address' => 'required',
-            'provider' => 'nullable',
-            'location' => 'nullable'
+            'name' => ['required', 'string', 'max:255'],
+            'ip_address' => ['required', 'ip'],
+            'provider' => ['nullable', 'string', 'max:255'],
+            'location' => ['nullable', 'string', 'max:255'],
         ]);
 
-        Server::create($data);
+        $data['user_id'] = $request->user()->id;
 
-        return redirect()->route('servers.index');
+        $server = Server::create($data);
+
+        activity_log('created server', 'Server', $server->id);
+
+        return redirect()->route('servers.index')
+            ->with('success', 'Server created');
     }
+
     public function update(Request $request, Server $server)
     {
-        $data = $request->validate([
-            'name' => ['required', 'string'],
-            'ip_address' => ['required', 'string'],
-            'provider' => ['required', 'string'],
-            'location' => ['required', 'string'],
-            'status' => ['required', 'in:online,offline'],
+        Gate::authorize('update', $server);
 
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'ip_address' => ['required', 'ip'],
+            'provider' => ['required', 'string', 'max:255'],
+            'location' => ['required', 'string', 'max:255'],
+            'status' => ['required', 'in:online,offline'],
         ]);
 
         $server->update($data);
 
+        activity_log('updated server', 'Server', $server->id);
+
         return redirect()->route('servers.index')
-            ->with('success', 'Servers updated');
+            ->with('success', 'Server updated');
     }
 
     public function destroy(Server $server)
     {
+        Gate::authorize('delete', $server);
+
+        activity_log('deleted server', 'Server', $server->id);
+
         $server->delete();
 
         return redirect()->route('servers.index')
-            ->with('success', 'Servers deleted');
+            ->with('success', 'Server deleted');
     }
+
     public function usage(Server $server)
     {
-        $server->load('hostingAccounts.domain');
+        Gate::authorize('view', $server);
 
-        $totalDisk = $server->hostingAccounts->sum('disk_usage');
-        $totalBandwidth = $server->hostingAccounts->sum('bandwidth_usage');
+        $server->load('hostingAccounts.domain');
 
         return Inertia::render('Servers/Usage', [
             'server' => $server,
-            'totalDisk' => $totalDisk,
-            'totalBandwidth' => $totalBandwidth,
-            'accounts' => $server->hostingAccounts
+            'totalDisk' => $server->hostingAccounts->sum('disk_usage'),
+            'totalBandwidth' => $server->hostingAccounts->sum('bandwidth_usage'),
+            'accounts' => $server->hostingAccounts,
         ]);
     }
 }

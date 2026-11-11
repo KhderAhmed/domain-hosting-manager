@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { useForm } from '@inertiajs/vue3'
 
@@ -9,65 +8,90 @@ const form = useForm({
 })
 
 function submit() {
-    form.post('/login')
+    form.post(route('login'), {
+        onFinish: () => form.reset('password'), // مسح كلمة المرور في حال حدوث خطأ
+    })
 }
 </script>
 
 <template>
-<div class="relative min-h-screen flex items-center justify-center
-            bg-gradient-to-br from-sky-700 via-blue-700 to-indigo-800 overflow-hidden">
+<div class="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-700 via-blue-700 to-indigo-800 overflow-hidden px-4">
 
     <!-- Glow background -->
-    <div class="absolute w-64 h-64 bg-blue-400/30 rounded-full blur-3xl -top-16 -right-16"></div>
-    <div class="absolute w-64 h-64 bg-purple-500/30 rounded-full blur-3xl -bottom-16 -left-16"></div>
+    <div class="absolute w-72 h-72 bg-blue-400/30 rounded-full blur-3xl -top-16 -right-16 pointer-events-none"></div>
+    <div class="absolute w-72 h-72 bg-purple-500/30 rounded-full blur-3xl -bottom-16 -left-16 pointer-events-none"></div>
 
     <!-- Login Card -->
-    <div class="relative w-full max-w-md p-8 rounded-2xl backdrop-blur-xl
-                bg-white/10 border border-white/20 shadow-2xl animate-fadeIn">
+    <div class="relative w-full max-w-md p-8 rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl animate-fadeIn">
 
-        <h1 class="text-2xl font-bold text-white mb-6 text-center">Login</h1>
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-extrabold text-white tracking-wide">Welcome Back</h1>
+            <p class="text-white/70 text-sm mt-1">Sign in to manage your hosting infrastructure</p>
+        </div>
 
         <form @submit.prevent="submit" class="space-y-5">
 
             <!-- Email -->
             <div class="relative">
-                <label class="text-white/80 text-sm">Email</label>
-                <input type="email" v-model="form.email" placeholder="email@example.com"
-                       class="w-full mt-2 p-3 pl-10 rounded-lg bg-white/20 border border-white/30
-                              text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-sky-400" />
-                <span class="absolute left-3 top-[38px] text-white/70 text-lg">📧</span>
+                <label class="text-white/80 text-sm font-medium">Email Address</label>
+                <div class="relative mt-1">
+                    <input 
+                        type="email" 
+                        v-model="form.email" 
+                        placeholder="email@example.com"
+                        class="w-full p-3 pl-11 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:bg-white/20 transition" 
+                    />
+                    <span class="absolute left-3.5 top-3.5 text-lg">📧</span>
+                </div>
+                <!-- عرض خطأ الإيميل إن وجد -->
+                <div v-if="form.errors.email" class="text-rose-300 text-xs mt-1 font-medium">
+                    {{ form.errors.email }}
+                </div>
             </div>
 
             <!-- Password -->
             <div class="relative">
-                <label class="text-white/80 text-sm">Password</label>
-                <input type="password" v-model="form.password" placeholder="••••••••"
-                       class="w-full mt-2 p-3 pl-10 rounded-lg bg-white/20 border border-white/30
-                              text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-sky-400" />
-                <span class="absolute left-3 top-[38px] text-white/70 text-lg">🔒</span>
+                <label class="text-white/80 text-sm font-medium">Password</label>
+                <div class="relative mt-1">
+                    <input 
+                        type="password" 
+                        v-model="form.password" 
+                        placeholder="••••••••"
+                        class="w-full p-3 pl-11 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:bg-white/20 transition" 
+                    />
+                    <span class="absolute left-3.5 top-3.5 text-lg">🔒</span>
+                </div>
+                <!-- عرض خطأ كلمة المرور إن وجد -->
+                <div v-if="form.errors.password" class="text-rose-300 text-xs mt-1 font-medium">
+                    {{ form.errors.password }}
+                </div>
             </div>
 
-            <!-- Remember -->
-            <div class="flex items-center space-x-2">
-                <input type="checkbox" v-model="form.remember" class="rounded" />
-                <span class="text-white/80 text-sm">Remember me</span>
+            <!-- Remember & Forgot Password -->
+            <div class="flex items-center justify-between text-sm">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" v-model="form.remember" class="rounded border-white/30 bg-white/10 text-sky-500 focus:ring-sky-400" />
+                    <span class="text-white/80 select-none">Remember me</span>
+                </label>
+
+                <a href="/forgot-password" class="text-white/70 hover:text-white transition underline text-xs">
+                    Forgot Password?
+                </a>
             </div>
 
             <!-- Button -->
-            <button class="w-full py-3 rounded-lg
-                           bg-gradient-to-r from-sky-500 to-blue-600
-                           hover:from-sky-600 hover:to-blue-700
-                           text-white font-semibold shadow-lg shadow-sky-500/50 hover:shadow-xl hover:shadow-sky-500/70
-                           transition">
-                Login
+            <button 
+                type="submit"
+                :disabled="form.processing"
+                class="w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold shadow-lg shadow-sky-500/40 hover:shadow-xl hover:shadow-sky-500/60 transition duration-300 disabled:opacity-50 flex items-center justify-center gap-2">
+                <svg v-if="form.processing" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>{{ form.processing ? 'Signing in...' : 'Sign In' }}</span>
             </button>
-<div class="text-center mt-4">
-  <a href="/forgot-password" class="text-white/70 hover:text-white text-sm underline">
-    Forgot Password?
-  </a>
-</div>
-        </form>
 
+        </form>
     </div>
 
 </div>
@@ -76,11 +100,10 @@ function submit() {
 <style>
 /* Fade-in animation */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 .animate-fadeIn {
-  animation: fadeIn 0.8s ease-out;
+    animation: fadeIn 0.8s ease-out;
 }
 </style>
-```
